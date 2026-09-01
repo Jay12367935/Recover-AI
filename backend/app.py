@@ -221,13 +221,15 @@ class RecoverAIHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args) -> None:
         print(f"[recoverai] {self.address_string()} - {format % args}")
 
-
 def main() -> None:
     host = os.getenv("RECOVERAI_HOST", "0.0.0.0")
-    port = int(os.getenv("RECOVERAI_PORT", os.getenv("PORT", "8000")))
+    port = int(os.getenv("PORT", "8000"))
+
     httpd = ThreadingHTTPServer((host, port), RecoverAIHandler)
+
     print(f"RecoverAI running at http://{host}:{port}", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
+
     httpd.serve_forever()
 
 
