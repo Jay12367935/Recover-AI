@@ -1,0 +1,7 @@
+# The default demo server in backend/app.py uses only Python standard library.
+# Install these when you want the optional FastAPI app and Razorpay SDK adapter.
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+razorpay>=1.4.2
+python-dotenv>=1.0.1
+

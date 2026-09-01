@@ -1,0 +1,29 @@
+{
+  "event": "payment.failed",
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_demo_webhook",
+        "order_id": "order_demo_webhook",
+        "amount": 499900,
+        "currency": "INR",
+        "method": "upi",
+        "bank": "HDFC",
+        "email": "rahul@example.com",
+        "contact": "+919876543210",
+        "error_code": "BANK_ERROR",
+        "created_at": 1788156000,
+        "notes": {
+          "customer_name": "Rahul S.",
+          "customer_previous_success": 8,
+          "customer_previous_failures": 1,
+          "customer_age_days": 420,
+          "previous_recovery_success": 0.71,
+          "merchant_category": "edtech",
+          "risk_score": 0.09
+        }
+      }
+    }
+  }
+}
+

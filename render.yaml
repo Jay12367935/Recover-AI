@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: recoverai
+    env: python
+    buildCommand: ""
+    startCommand: python backend/app.py
+    envVars:
+      - key: RECOVERAI_HOST
+        value: 0.0.0.0
+      - key: RECOVERAI_RAZORPAY_DRY_RUN
+        value: "true"

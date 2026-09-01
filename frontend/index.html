@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RecoverAI</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="side-nav">
+        <div class="brand">
+          <div class="brand-mark">R</div>
+          <div>
+            <strong>RecoverAI</strong>
+            <span>Revenue Recovery Agent</span>
+          </div>
+        </div>
+
+        <nav>
+          <a class="active" href="#overview">Overview</a>
+          <a href="#calculator">Recovery Simulator</a>
+          <a href="#activity">Live Recovery Queue</a>
+          <a href="#decision">AI Decision</a>
+          <a href="#batch">Batch Simulation</a>
+          <a href="#counterfactual">Counterfactual</a>
+          <a href="#safety">Audit & Safety</a>
+          <a href="#report">Recovery Report</a>
+        </nav>
+
+        <div class="model-card">
+          <span>Model Performance</span>
+          <dl class="model-metrics">
+            <div><dt>ROC-AUC</dt><dd id="modelAuc">--</dd></div>
+            <div><dt>Precision</dt><dd id="modelPrecision">--</dd></div>
+            <div><dt>Recall</dt><dd id="modelRecall">--</dd></div>
+            <div><dt>F1</dt><dd id="modelF1">--</dd></div>
+          </dl>
+          <small id="modelRows">20% held-out test data</small>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">AI Revenue Recovery</p>
+            <h1>Every failed payment gets the right next action.</h1>
+            <p class="hero-copy">RecoverAI diagnoses failed payments, chooses the highest-value recovery action, and executes it within merchant-defined safety limits.</p>
+          </div>
+          <div class="topbar-actions">
+            <button id="webhookBtn" class="ghost-button" type="button">Simulate Payment Failure</button>
+            <button id="simulateBtn" class="ghost-button" type="button">Create Test Failure</button>
+            <button id="reportBtn" class="ghost-button" type="button">Report</button>
+            <button id="resetBtn" class="ghost-button" type="button">Reset</button>
+            <button id="batchBtn" class="primary-button" type="button">Run AI batch</button>
+          </div>
+        </header>
+
+        <section id="overview" class="metrics-grid">
+          <article class="metric-card accent-amber">
+            <span>Revenue At Risk</span>
+            <strong id="failedAmount">₹0</strong>
+            <small id="failedCount">0 failed-payment opportunities</small>
+          </article>
+          <article class="metric-card accent-teal">
+            <span>Recoverable</span>
+            <strong id="atRiskAmount">₹0</strong>
+            <small id="recoverableCount">0 eligible opportunities</small>
+          </article>
+          <article class="metric-card accent-green">
+            <span>Realized Recovery</span>
+            <strong id="recoveredAmount">₹0</strong>
+            <small id="recoveredCount">0 payments saved</small>
+          </article>
+          <article class="metric-card accent-coral">
+            <span>Recovery Rate</span>
+            <strong id="recoveryRate">0%</strong>
+            <small id="reviewQueue">0 in review queue</small>
+          </article>
+        </section>
+
+        <section class="insight-strip" aria-live="polite">
+          <div>
+            <span>Merchant Insight</span>
+            <strong id="merchantInsight">RecoverAI is calculating the revenue story...</strong>
+          </div>
+          <div>
+            <span>Webhook Events</span>
+            <strong id="webhookEvents">0</strong>
+          </div>
+        </section>
+
+        <section class="panel root-cause-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Failure Diagnosis</p>
+              <h2>Merchant-level root causes</h2>
+            </div>
+            <span class="pill neutral">Live from database</span>
+          </div>
+          <div id="rootCauseList" class="root-cause-list"></div>
+        </section>
+
+        <section id="calculator" class="panel calculator-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Recovery Simulator</p>
+              <h2>Test a failed payment</h2>
+            </div>
+            <span id="formStatus" class="pill neutral">Ready</span>
+          </div>
+
+          <form id="manualPaymentForm" class="input-grid">
+            <label>
+              Customer name
+              <input name="customer_name" type="text" placeholder="Rahul S." required />
+            </label>
+            <label>
+              Amount
+              <input name="amount" type="number" min="1" step="1" placeholder="4999" required />
+            </label>
+            <label>
+              Method
+              <select name="method" required></select>
+            </label>
+            <label>
+              Bank
+              <select name="bank" required></select>
+            </label>
+            <label>
+              Failure code
+              <select name="failure_code" required></select>
+            </label>
+            <label>
+              Merchant category
+              <select name="merchant_category" required></select>
+            </label>
+            <label>
+              Previous successes
+              <input name="customer_previous_success" type="number" min="0" step="1" placeholder="8" />
+            </label>
+            <label>
+              Previous failures
+              <input name="customer_previous_failures" type="number" min="0" step="1" placeholder="1" />
+            </label>
+            <label>
+              Attempt number
+              <input name="attempt_number" type="number" min="1" max="10" step="1" placeholder="1" />
+            </label>
+            <label>
+              Minutes since last attempt
+              <input name="time_since_last_attempt" type="number" min="0" step="1" placeholder="30" />
+            </label>
+            <label>
+              Hour of day
+              <input name="hour" type="number" min="0" max="23" step="1" placeholder="22" />
+            </label>
+            <label>
+              Day of week
+              <select name="day_of_week">
+                <option value="">Current day</option>
+                <option value="0">Monday</option>
+                <option value="1">Tuesday</option>
+                <option value="2">Wednesday</option>
+                <option value="3">Thursday</option>
+                <option value="4">Friday</option>
+                <option value="5">Saturday</option>
+                <option value="6">Sunday</option>
+              </select>
+            </label>
+            <label>
+              Customer age in days
+              <input name="customer_age_days" type="number" min="0" step="1" placeholder="420" />
+            </label>
+            <label>
+              Previous recovery success
+              <input name="previous_recovery_success" type="number" min="0" max="1" step="0.01" placeholder="0.71" />
+            </label>
+            <label>
+              Risk score
+              <input name="risk_score" type="number" min="0" max="1" step="0.01" placeholder="0.09" />
+            </label>
+            <label>
+              Customer phone
+              <input name="phone" type="tel" placeholder="+919876543210" />
+            </label>
+            <label class="wide-field">
+              Customer email
+              <input name="email" type="email" placeholder="rahul@example.com" />
+            </label>
+            <div class="form-actions wide-field">
+              <button id="previewBtn" class="ghost-button" type="button">Calculate only</button>
+              <button class="primary-button" type="submit">Save and calculate</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="main-grid">
+          <section id="activity" class="panel activity-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">AI Recovery Activity</p>
+                <h2>Failed payment queue</h2>
+              </div>
+              <span id="queueCount" class="pill">0 items</span>
+            </div>
+            <div id="paymentList" class="payment-list"></div>
+          </section>
+
+          <section id="decision" class="panel decision-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Agent Decision</p>
+                <h2 id="selectedTitle">Select a payment</h2>
+                <p id="selectedMeta" class="selected-meta">Choose a simulator or queue payment to inspect.</p>
+              </div>
+              <span id="policyBadge" class="pill neutral">Policy</span>
+            </div>
+
+            <div class="decision-summary">
+              <div>
+                <span>Recommended</span>
+                <strong id="recommendedAction">--</strong>
+              </div>
+              <div>
+              <span>Expected Recovery</span>
+              <strong id="expectedRecovery">₹0</strong>
+            </div>
+          </div>
+
+            <div class="agent-pipeline">
+              <div id="pipelineDetect">Failure detected</div>
+              <div id="pipelineDiagnose">Root cause pending</div>
+              <div id="pipelineScore">Recovery scored</div>
+              <div id="pipelinePolicy">Policy checked</div>
+              <div id="pipelineExecute">Execution pending</div>
+            </div>
+
+            <div id="probabilityBars" class="probability-bars"></div>
+
+            <div class="policy-gate">
+              <span>Policy Gate</span>
+              <strong id="policyGateTitle">Waiting for decision</strong>
+              <p id="policyGateDetail">Model output will be checked against amount, risk, and retry guardrails before execution.</p>
+            </div>
+
+            <div class="reason-box">
+              <span>Reason</span>
+              <p id="decisionReason">Choose a transaction to see diagnosis, model probabilities, and policy output.</p>
+            </div>
+
+            <div class="reason-box">
+              <span>Why Not Alternatives?</span>
+              <p id="whyNotText">Alternative action tradeoffs will appear after analysis.</p>
+            </div>
+
+            <div class="message-box">
+              <div>
+                <span>Customer Message</span>
+                <p id="customerMessage">--</p>
+              </div>
+            </div>
+
+            <div class="timeline-box">
+              <span>Recovery Timeline</span>
+              <ol id="timelineList"></ol>
+            </div>
+
+            <button id="executeBtn" class="primary-button wide" type="button" disabled>Execute safe action</button>
+          </section>
+        </section>
+
+        <section id="batch" class="panel batch-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Batch Simulation</p>
+              <h2>10,000 failed payments</h2>
+            </div>
+            <button id="runBatchSimulationBtn" class="primary-button" type="button">Run simulation</button>
+          </div>
+          <div id="batchSteps" class="batch-steps">
+            <span><strong>Analyzing</strong><em>waiting</em></span>
+            <span><strong>Classifying</strong><em>waiting</em></span>
+            <span><strong>Scoring</strong><em>waiting</em></span>
+            <span><strong>Applying policies</strong><em>waiting</em></span>
+            <span><strong>Recovery actions</strong><em>waiting</em></span>
+          </div>
+          <div id="batchResults" class="batch-results"></div>
+        </section>
+
+        <section id="counterfactual" class="panel counterfactual-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Killer Feature</p>
+              <h2>What would have happened without RecoverAI?</h2>
+            </div>
+            <strong id="incrementalRevenue" class="impact">₹0 more</strong>
+          </div>
+
+          <div class="counterfactual-hero">
+            <div>
+              <span>Blind Retry</span>
+              <strong id="tradHeroRecovered">₹0</strong>
+            </div>
+            <div>
+              <span>RecoverAI</span>
+              <strong id="aiHeroRecovered">₹0</strong>
+            </div>
+            <div>
+              <span>Incremental Recovery</span>
+              <strong id="incrementalHero">₹0</strong>
+            </div>
+            <div>
+              <span>Unnecessary Attempts</span>
+              <strong id="wasteHero">0% fewer</strong>
+            </div>
+          </div>
+
+          <div class="comparison-table">
+            <div class="table-row table-head">
+              <span>Metric</span>
+              <span>Traditional</span>
+              <span>RecoverAI</span>
+            </div>
+            <div class="table-row">
+              <span>Failed payments</span>
+              <span id="tradFailed">0</span>
+              <span id="aiFailed">0</span>
+            </div>
+            <div class="table-row">
+              <span>Recovery attempts</span>
+              <span id="tradRetries">0</span>
+              <span id="aiRetries">0</span>
+            </div>
+            <div class="table-row">
+              <span>Recovered</span>
+              <span id="tradRecovered">₹0</span>
+              <span id="aiRecovered">₹0</span>
+            </div>
+            <div class="table-row">
+              <span>Recovery rate</span>
+              <span id="tradRate">0%</span>
+              <span id="aiRate">0%</span>
+            </div>
+            <div class="table-row">
+              <span>Unnecessary attempts</span>
+              <span id="tradWaste">0</span>
+              <span id="aiWaste">0</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="safety" class="panel safety-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Audit & Safety</p>
+              <h2>Recovery guardrails</h2>
+            </div>
+            <span class="pill allowed">Enforced</span>
+          </div>
+          <div class="guardrail-grid">
+            <div><span>Maximum retries</span><strong>2</strong></div>
+            <div><span>Auto-action amount limit</span><strong>₹10,000</strong></div>
+            <div><span>High-risk threshold</span><strong>80%</strong></div>
+            <div><span>Human approval</span><strong>Required above limit</strong></div>
+          </div>
+          <div id="auditTrail" class="audit-trail"></div>
+        </section>
+
+        <section id="report" class="panel report-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Database Report</p>
+              <h2>Recovery report</h2>
+            </div>
+            <div class="topbar-actions compact-actions">
+              <button id="refreshReportBtn" class="ghost-button" type="button">Refresh</button>
+              <button id="downloadCsvBtn" class="primary-button" type="button">Download CSV</button>
+            </div>
+          </div>
+          <div class="report-filters">
+            <button class="filter-chip active" data-filter="all" type="button">All</button>
+            <button class="filter-chip" data-filter="recovered" type="button">Recovered</button>
+            <button class="filter-chip" data-filter="unrecovered" type="button">Unrecovered</button>
+            <button class="filter-chip" data-filter="pending_review" type="button">Human Review</button>
+            <button class="filter-chip" data-filter="blocked" type="button">Blocked</button>
+            <button class="filter-chip" data-filter="failed" type="button">Failed</button>
+          </div>
+          <div class="report-table-wrap">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Payment</th>
+                  <th>Customer</th>
+                  <th>Failure</th>
+                  <th>Action</th>
+                  <th>Status</th>
+                  <th>Recovered</th>
+                </tr>
+              </thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
