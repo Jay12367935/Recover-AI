@@ -161,6 +161,11 @@ class RecoverAITest(unittest.TestCase):
                 self.assertEqual(saved["payment"]["customer_previous_failures"], 1)
                 self.assertIsNotNone(saved["payment"]["latest_decision"])
                 self.assertIn("8 successful and 1 failed", saved["decision"]["reason"])
+
+                executed = service.execute(saved["payment"]["id"])
+                self.assertEqual(executed["result"], "recovered")
+                detail = service.payment_detail(saved["payment"]["id"])
+                self.assertEqual(detail["status"], "recovered")
             finally:
                 service.close()
 

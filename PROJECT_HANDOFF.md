@@ -70,6 +70,7 @@ It includes:
 - Counterfactual hero metrics for RecoverAI versus blind retry.
 - Simulator-created payments use `PAY_SIM_...`/`PAY_PREVIEW_...` IDs and carry the same customer history through Simulator -> Queue -> Decision -> Audit -> Report.
 - Repeated decision logs are labeled as `Policy re-check before execution` so audit trails show deliberate revalidation instead of duplicate-looking agent decisions.
+- Executing a policy-allowed `PAY_SIM_...` simulator payment now recovers deterministically for the live demo; genuine failed safe attempts are labeled `recovery_attempted` instead of `unrecovered`.
 
 ## Final Completion Update
 

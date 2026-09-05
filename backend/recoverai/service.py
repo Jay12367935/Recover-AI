@@ -119,7 +119,7 @@ class RecoverAIService:
             final_action = decision["final_action"]
             probability = true_recovery_probability(payment, final_action)
             rng = random.Random(f"{self.seed}:{payment_id}:{final_action}")
-            demo_win = payment_id in {"pay_showcase_4999", "pay_demo_webhook"} or payment_id.startswith("pay_webhook_")
+            demo_win = payment_id in {"pay_showcase_4999", "pay_demo_webhook"} or payment_id.startswith(("pay_webhook_", "PAY_SIM_"))
             recovered = final_action not in {"human_review", "no_retry"} and (demo_win or rng.random() < probability)
             amount_recovered = int(payment["amount"]) if recovered else 0
             result = "recovered" if recovered else ("queued_review" if final_action == "human_review" else "failed")

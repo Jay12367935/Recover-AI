@@ -295,7 +295,7 @@ def log_attempt(
             json.dumps(decision["customer_message"]),
         ),
     )
-    status = "recovered" if amount_recovered > 0 else ("pending_review" if final_action == "human_review" else "unrecovered")
+    status = "recovered" if amount_recovered > 0 else ("pending_review" if final_action == "human_review" else "recovery_attempted")
     conn.execute("UPDATE payments SET status = ? WHERE id = ?", (status, payment["id"]))
 
 

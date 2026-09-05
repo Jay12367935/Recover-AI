@@ -15,6 +15,14 @@ const actionLabels = {
   no_retry: "Do not retry",
 };
 
+const statusLabels = {
+  failed: "Failed",
+  recovered: "Recovered",
+  pending_review: "Human review",
+  recovery_attempted: "Recovery attempted",
+  preview: "Preview",
+};
+
 const formatMoney = (value) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -176,7 +184,7 @@ function renderPayments() {
             <strong>${payment.failure_code.replaceAll("_", " ")} · ${payment.method.toUpperCase()} · ${payment.bank}</strong>
             <span>${payment.customer_name} · ${action}</span>
           </span>
-          <span class="payment-state">${payment.status.replaceAll("_", " ")}</span>
+          <span class="payment-state">${statusLabels[payment.status] || String(payment.status).replaceAll("_", " ")}</span>
         </button>
       `;
     })
@@ -195,6 +203,7 @@ function renderReport(report) {
       if (state.reportFilter === "all") return true;
       if (state.reportFilter === "blocked") return payment.policy_status === "blocked";
       if (state.reportFilter === "failed") return payment.status === "failed";
+      if (state.reportFilter === "recovery_attempted") return payment.status === "recovery_attempted" || payment.status === "unrecovered";
       return payment.status === state.reportFilter || payment.result === state.reportFilter;
     })
     .slice(0, 80);
@@ -221,7 +230,7 @@ function renderReport(report) {
             <span>${payment.confidence ? `${Math.round(payment.confidence * 100)}% confidence` : "Awaiting decision"}</span>
           </td>
           <td>
-            <strong>${String(payment.status || "--").replaceAll("_", " ")}</strong>
+            <strong>${statusLabels[payment.status] || String(payment.status || "--").replaceAll("_", " ")}</strong>
             <span>${payment.policy_status || payment.result || "--"}</span>
           </td>
           <td>
@@ -269,7 +278,7 @@ function renderDecision(payment) {
   document.querySelector("#decisionReason").textContent = decision.reason;
   document.querySelector("#customerMessage").textContent = decision.customer_message?.hinglish || "--";
   document.querySelector("#executeBtn").disabled =
-    payment.status === "preview" || payment.status === "recovered" || payment.status === "pending_review";
+    payment.status !== "failed";
 
   badge.textContent = decision.policy.status;
   badge.className = `pill ${decision.policy.status}`;
